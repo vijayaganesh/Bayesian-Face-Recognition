@@ -21,15 +21,9 @@ class Train_Gray_Hist:
         mu,sigma,image_data = self.compute_stat(img_array)
         np.save(self.output_dir+"/gray_hist_image_data_"+data_type,image_data)
         np.save(self.output_dir+"/gray_hist_mu_"+data_type,mu)
-<<<<<<< HEAD:src/training_gauss/train_gray_hist.py
         mu = np.round(mu.reshape((100,100,1))).astype(np.uint8)
 #        if(np.min(sigma)<0):
 #            sigma = sigma - np.min(sigma)
-=======
-        mu = np.round(mu.reshape((60,60,1))).astype(np.uint8)
-        if(np.min(sigma)<0):
-            sigma = sigma - np.min(sigma)
->>>>>>> parent of e6e1666b... Added Mixture of Gaussian Models:src/training/train_gray_hist.py
         sig = np.copy(sigma)
         sig *= (255.0/sig.max())
         sig = np.round(sig).reshape((60,60,1)).astype(np.uint8)

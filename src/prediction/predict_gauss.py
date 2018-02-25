@@ -15,20 +15,19 @@ class Predict:
             mu0,image0,mu1,image1,shape =self.load_model(type)
             image0,image1 = self.reduce_dimensions(image0),self.reduce_dimensions(image1)
             mu0,mu1 = np.mean(image0,axis = 0),np.mean(image1,axis = 0)
+            print(mu0)
             cov0 = np.cov(image0.T)
             cov1 = np.cov(image1.T)
             cov0_det,cov0_inv =  np.linalg.det(cov0),np.linalg.inv(cov0)
             cov1_det,cov1_inv =  np.linalg.det(cov1),np.linalg.inv(cov1)
             self.ground_truth = list()
             test_images = self.load_test_data(type)
-            print(test_images.shape)
             test_pca = self.reduce_dimensions(test_images)
             prediction = list()
             correct_pred = 0
             for x,pred in zip(test_pca,self.ground_truth):
                 lh_0 = self.pdf_nd(mu0,cov0_det,cov0_inv,x)
                 lh_1 = self.pdf_nd(mu1,cov1_det,cov1_inv,x)
-                print((lh_0,lh_1))
                 prob = self.compute_posterior(lh_0,lh_1)
                 if(prob>=0.5):
                     prob = 1
@@ -48,7 +47,6 @@ class Predict:
     def load_test_data(self,type):
         pos_files = glob.glob(self.pos_test_dir+'/*.jpg')
         neg_files = glob.glob(self.neg_test_dir+'/*.jpg')
-        print(pos_files)
         test_images = []
         file_count = 0
         for file in pos_files:

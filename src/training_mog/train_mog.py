@@ -62,11 +62,12 @@ class train_mog:
                 else:
                     mu = np.round(mu.reshape((100,100,1))).astype(np.uint8)
 #                print(np.max(mu))
-                cv2.imshow('mean',mu)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+#                cv2.imshow('mean',mu)
+#                cv2.waitKey(0)
+#                cv2.destroyAllWindows()
 #                    print(self.output_image_dir+file_type+"+"_mog_"+repr(i)
                 cv2.imwrite(self.output_image_dir+"/"+file_type+"_mog_"+repr(i+1)+".jpg",mu)
+            print(model.theta)
             np.save(self.output_numpy_dir+"/"+file_type+"_mu",model.mu)
             np.save(self.output_numpy_dir+"/"+file_type+"_cov",model.cov)
             np.save(self.output_numpy_dir+"/"+file_type+"_theta",model.theta)
@@ -86,7 +87,7 @@ class train_mog:
             np.save(self.output_numpy_dir+"/"+file_type+"_cov_neg",cov)
             
 if __name__ == '__main__':
-    train_mog('hsv',15)
+    train_mog('hsv',5)
             
         
         
