@@ -11,15 +11,13 @@ if parentPath not in sys.path:
 from utilities.Utilities import Utilities
 
 class Predict:
-    likelihood_dir = os.path.abspath('../../Output/Images/')
+    likelihood_dir = os.path.abspath('../../Output/Numpy/mog/')
     pos_test_dir = os.path.abspath("../../Dataset/Test/positive/")
     neg_test_dir = os.path.abspath("../../Dataset/Test/negative/")
-    output_dir = os.path.abspath("../../Output/")
     print(pos_test_dir)
     reduced_dimensions = 50
     def __init__(self,type):
-            mu0,image0,mu1,image1,shape =self.load_model(type)
-            image0,image1 = self.reduce_dimensions(image0),self.reduce_dimensions(image1)
+            mu0,cov0,mu1,cov1,theta,shape =self.load_model(type)
             mu0,mu1 = np.mean(image0,axis = 0),np.mean(image1,axis = 0)
             print(mu0)
             cov0 = np.cov(image0.T)
@@ -45,9 +43,8 @@ class Predict:
 #                print("Correct/Total Predictions: "+repr((correct_pred,len(prediction))))
             print("Accuracy: "+repr(float(correct_pred)*100/len(prediction)))
             print(Utilities.performance_Metrics(prediction,self.ground_truth))
-            fp,tp,_ = roc_curve(self.ground_truth,prediction)
+            fp,tp,_ = roc_curve(self.ground_truth,prediction)   
             area_under_curve = auc(fp, tp)
-            print((fp,tp))
             plt.plot(fp, tp, 'b',label='AUC = %0.2f'% area_under_curve)
             plt.legend(loc='lower right')
             plt.plot([0,1],[0,1],'r--')
@@ -85,12 +82,13 @@ class Predict:
         return image.ravel()
 
     def load_model(self,type):
-        mu1 = np.load(os.path.join(self.likelihood_dir,type+"_mu_positive.npy"))
-        image1 = np.load(os.path.join(self.likelihood_dir,type+"_image_data_positive.npy"))
-        mu0 = np.load(os.path.join(self.likelihood_dir,type+"_mu_negative.npy"))
-        image0 = np.load(os.path.join(self.likelihood_dir,type+"_image_data_negative.npy"))
+        mu1 = np.load(os.path.join(self.likelihood_dir,type+"_mu.npy"))
+        cov1 = np.load(os.path.join(self.likelihood_dir,type+"_cov.npy"))
+        mu0 = np.load(os.path.join(self.likelihood_dir,type+"_mu_neg.npy"))
+        cov0 = np.load(os.path.join(self.likelihood_dir,type+"_cov_neg.npy"))
+        theta = np.load(os.path.join(self.likelihood_dir,type+"_theta.npy"))
         shape = mu0.shape
-        return mu0,image0,mu1,image1,shape
+        return mu0,cov0,mu1,cov1,theta,shape
     def pdf_nd(self,mu,cov_det,cov_inv,x):
         prod = -0.5 * np.matmul(np.matmul(x-mu,cov_inv),np.transpose(x-mu))
         prob = (1/np.sqrt(2*np.pi*cov_det))*np.exp(prod)

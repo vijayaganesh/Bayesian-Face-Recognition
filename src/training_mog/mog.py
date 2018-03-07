@@ -13,7 +13,10 @@ from utilities.Utilities import Utilities
 from common.model import Model
 class MoG(Model):
     def __init__(self,records,mixtures):
-        Model.__init__(self,records,mixtures)
+        Model.__init__(self,records)
+        self.mixtures = mixtures
+        self.mu = np.random.permutation(records)[0:mixtures]
+        self.cov = np.ones((mixtures,self.dimensions,self.dimensions))*np.cov(records.T)
         self.theta = np.ones(mixtures)*(1/mixtures)
     
     def compute_cost_function(self):
@@ -50,6 +53,7 @@ class MoG(Model):
             iteration += 1
             print("Expectation Maximization Iteration: "+repr(iteration))
             prev_cost = curr_cost
+            curr_cost = self.compute_cost_function()
             curr_cost = self.update_vars(curr_cost)
         print("EM Complete in "+repr(iteration)+" iterations.")
         print("Initial Cost: "+repr(np.sum(initial_cost)))

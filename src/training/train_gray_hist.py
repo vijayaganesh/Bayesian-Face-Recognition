@@ -26,7 +26,7 @@ class Train_Gray_Hist:
 #            sigma = sigma - np.min(sigma)
         sig = np.copy(sigma)
         sig *= (255.0/sig.max())
-        sig = np.round(sig).reshape((60,60,1)).astype(np.uint8)
+        sig = np.round(sig).reshape((100,100,1)).astype(np.uint8)
         # print(sig
         cv2.imwrite(self.output_dir+"/gray_hist_mu_"+data_type+".jpg",mu)
         cv2.imwrite(self.output_dir+"/gray_hist_sig_"+data_type+".jpg",sig)

@@ -21,12 +21,12 @@ class Train_RGB:
         mu,sigma,image_data = self.compute_stat(img_array)
         np.save(self.output_dir+"/rgb_image_data_"+data_type,image_data)
         np.save(self.output_dir+"/rgb_mu_"+data_type,mu)
-        mu = np.round(mu.reshape((60,60,3))).astype(np.uint8)
+        mu = np.round(mu.reshape((100,100,3))).astype(np.uint8)
         if(np.min(sigma)<0):
             sigma = sigma - np.min(sigma)
         sig = np.copy(sigma)
         sig *= (255.0/sig.max())
-        sig = np.round(sig).reshape((60,60,3)).astype(np.uint8)
+        sig = np.round(sig).reshape((100,100,3)).astype(np.uint8)
         # print(sig
         cv2.imwrite(self.output_dir+"/rgb_mu_"+data_type+".jpg",mu)
         cv2.imwrite(self.output_dir+"/rgb_sig_"+data_type+".jpg",sig)

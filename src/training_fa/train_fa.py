@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
-
 """
-Created on Fri Feb 23 17:57:13 2018
+Created on Sun Mar  4 17:32:45 2018
 
 @author: VijayaGanesh Mohan
+@email: vmohan2@ncsu.edu
+
 """
+
 import numpy as np
-from mog import MoG
+from factor_analyzer import Factor_Analyzer
 import cv2
 import glob
-from sklearn.decomposition import PCA
 import os
-class train_mog:
+class train_fa:
     pos_dir = os.path.abspath("../../Dataset/Training/positive/")
     neg_dir = os.path.abspath("../../Dataset/Training/negative/")
-    output_image_dir = os.path.abspath("../../Output/Images/mog/")
-    output_numpy_dir = os.path.abspath("../../Output/Numpy/mog/")
+    output_image_dir = os.path.abspath("../../Output/Images/fa/")
+    output_numpy_dir = os.path.abspath("../../Output/Numpy/fa/")
     reduced_dimensions = 50
-    def __init__(self,file_type,k):
+    def __init__(self,file_type,factors):
         pos_files = glob.glob(self.pos_dir+'/*.jpg')
         neg_files = glob.glob(self.neg_dir+'/*.jpg')
         files = glob.glob(self.output_image_dir+'/'+file_type+'*.jpg')
@@ -26,8 +27,8 @@ class train_mog:
         files = glob.glob(self.output_numpy_dir+'/'+file_type+'*')
         for f in files:
             os.remove(f)
-        self.compute_likelihood(pos_files,'positive',file_type,k)
-        self.compute_likelihood(neg_files,'negative',file_type,k)
+        self.compute_likelihood(pos_files,'positive',file_type,factors)
+        self.compute_likelihood(neg_files,'negative',file_type,factors)
     def compute_likelihood(self,files,data_type,file_type,k):
         img_array = []
         for file in files:
@@ -45,32 +46,39 @@ class train_mog:
             gray_img = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
             image = cv2.equalizeHist(gray_img)
         return image.ravel()
-    def compute_stat(self,img_array,data_type,file_type,k):
+    def compute_stat(self,img_array,data_type,file_type,factors):
         img_array = np.array(img_array)
-        pca = PCA(n_components=self.reduced_dimensions,svd_solver='randomized').fit(img_array)
-        pca_array = pca.transform(img_array)
         if data_type == 'positive':
-            model = MoG(pca_array,k)
-            model.exp_max(tolerance = 1e-18)
-            for i in range(0,k):
-                mu = pca.inverse_transform(model.mu[i])
+            model = Factor_Analyzer(img_array,factors)
+            model.exp_max(iterations = 4)
+            for i in range(0,factors):
+                mu_1 = model.mu + 2*(model.phi[:,i]/np.mean(model.phi[:,i]))
+                mu_2 = model.mu - 2*(model.phi[:,i]/np.mean(model.phi[:,i]))
+                print(model.phi[:,i])
                 if(file_type == "rgb"):
-                    mu = np.round(mu.reshape((100,100,3))).astype(np.uint8)
+                    mu_1 = np.round(mu_1.reshape((100,100,3))).astype(np.uint8)
+                    mu_2 = np.round(mu_2.reshape((100,100,3))).astype(np.uint8)
                 elif file_type == "hsv":
-                    mu = np.round(mu.reshape((100,100,3))).astype(np.uint8)
-                    mu = cv2.cvtColor(mu,cv2.COLOR_HSV2BGR)
+                    mu_1 = np.round(mu_1.reshape((100,100,3))).astype(np.uint8)
+                    mu_1 = cv2.cvtColor(mu_1,cv2.COLOR_HSV2BGR)
+                    mu_2 = np.round(mu_2.reshape((100,100,3))).astype(np.uint8)
+                    mu_2 = cv2.cvtColor(mu_2,cv2.COLOR_HSV2BGR)
                 else:
-                    mu = np.round(mu.reshape((100,100,1))).astype(np.uint8)
+                    mu_1 = np.round(mu_1.reshape((100,100,1))).astype(np.uint8)
+                    mu_2 = np.round(mu_2.reshape((100,100,1))).astype(np.uint8)
 #                print(np.max(mu))
-                print(model.theta[i])
-                cv2.imshow('mean',mu)
+                cv2.imshow('mean',mu_1)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
+                cv2.imshow('mean',mu_2)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
 #                    print(self.output_image_dir+file_type+"+"_mog_"+repr(i)
-                cv2.imwrite(self.output_image_dir+"/"+file_type+"_mog_"+repr(i+1)+".jpg",mu)
+                cv2.imwrite(self.output_image_dir+"/"+file_type+"_fa_mu_plus_phi_"+repr(i+1)+".jpg",mu_1)
+                cv2.imwrite(self.output_image_dir+"/"+file_type+"_fa_mu_minus_phi_"+repr(i+1)+".jpg",mu_2)
             np.save(self.output_numpy_dir+"/"+file_type+"_mu",model.mu)
             np.save(self.output_numpy_dir+"/"+file_type+"_cov",model.cov)
-            np.save(self.output_numpy_dir+"/"+file_type+"_theta",model.theta)
+            np.save(self.output_numpy_dir+"/"+file_type+"_phi",model.phi)
         else:
             mu = np.mean(img_array,axis = 0)
             if(file_type == "rgb"):
@@ -81,22 +89,10 @@ class train_mog:
             else:
                 mu = np.round(mu.reshape((100,100,1))).astype(np.uint8)
             cv2.imwrite(self.output_image_dir+"/"+file_type+"_mog_neg.jpg",mu)
-            pca_mu = np.mean(pca_array,axis = 0)
-            cov = np.cov(pca_array.T)
-            np.save(self.output_numpy_dir+"/"+file_type+"_mu_neg",pca_mu)
+            mu = np.mean(img_array,axis = 0)
+            cov = np.cov(img_array.T)
+            np.save(self.output_numpy_dir+"/"+file_type+"_mu_neg",mu)
             np.save(self.output_numpy_dir+"/"+file_type+"_cov_neg",cov)
             
 if __name__ == '__main__':
-    train_mog('rgb',15)
-            
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+    train_fa('rgb',4)

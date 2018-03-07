@@ -11,11 +11,9 @@ import numpy as np
 np.random.seed(5)
 class Model(ABC):
     
-    def __init__(self,records,mixtures):
+    def __init__(self,records):
         self.dimensions = records.shape[1]
         self.nrows = records.shape[0]
-        self.mu = np.random.permutation(records)[0:mixtures]
-        self.cov = np.ones((mixtures,self.dimensions,self.dimensions))*np.cov(records.T)
         self.x = records
     @abstractmethod
     def compute_cost_function(self):
